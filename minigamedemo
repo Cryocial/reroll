@@ -1,0 +1,342 @@
+import random
+
+# Trait pool with effects
+pool = [
+    { "id": "godly", "name": "Godly (0.1%)", "probability": 0.1, "count": 0, "bonus": "ATK +300%, Energy Gain +20%, HP +100%" },
+    { "id": "legendary", "name": "Legendary (0.175%)", "probability": 0.175, "count": 0, "bonus": "ATK +50%, Energy Gain +10%" },
+    { "id": "deadeye", "name": "Deadeye (0.375%)", "probability": 0.375, "count": 0, "bonus": "CRIT RATE +30%" },
+    { "id": "mutant", "name": "Mutant (0.5%)", "probability": 0.5, "count": 0, "bonus": "ATK +20, Energy Gain +10%" },
+    { "id": "golden", "name": "Golden (2.5%)", "probability": 2.5, "count": 0, "bonus": "ATK +40%" },
+    { "id": "flash", "name": "Flash (1.85%)", "probability": 1.85, "count": 0, "bonus": "Energy Gain +20%" },
+    { "id": "juggernaut", "name": "Juggernaut (4%)", "probability": 7.49, "count": 0, "bonus": "HP +50%" },
+    { "id": "swift", "name": "Swift III (6%)", "probability": 6, "count": 0, "bonus": "Energy Gain +10%" },
+    { "id": "vigor", "name": "Vigor III (6%)", "probability": 6, "count": 0, "bonus": "HP + 15%" },
+    { "id": "strength", "name": "Strength III (6%)", "probability": 6, "count": 0, "bonus": "ATK +15%" },
+    { "id": "everythingElse", "name": "Nothing Rare... (69%)", "probability": 69, "count": 0, "bonus": "No Bonus" },
+]
+
+# All possible units
+all_units = [
+    {"name": "Archer", "atk": 120, "hp": 100, "energy_gain": 1.1, "crit": 5, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "A Wave of Arrows"},
+    {"name": "Saber", "atk": 100, "hp": 130, "energy_gain": 1, "crit": 0, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "A Beam of Light"},
+    {"name": "Lancer", "atk": 100, "hp": 110, "energy_gain": 1, "crit": 10, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "A Flurry of Spears"},
+    {"name": "Caster", "atk": 120, "hp": 80, "energy_gain": 1.3, "crit": 0, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "A Curse of Death"},
+    {"name": "Rider", "atk": 120, "hp": 120, "energy_gain": 1, "crit": 0, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "A Pegasus Charge"},
+    {"name": "Assassin", "atk": 80,"hp": 90, "energy_gain": 1, "crit": 50, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "A Shadow Strike"},
+    {"name": "Berserker", "atk": 200,"hp": 50, "energy_gain": 0.7, "crit": 0, "atk_bonus": 0, "crit_bonus": 0, "hp_bonus": 0, "energy_bonus": 0, "currenthp": 0, "currentatk": 0, "cenergy_gain": 0, "trait": None, "alive": True, "ultm": "freaky mode"},
+]
+
+team = []
+reroll_counter = 0
+roll_history = []
+
+def roll_trait():
+    rand_value = random.uniform(0, 100)
+    cumulative = 0
+    for item in pool:
+        cumulative += item["probability"]
+        if rand_value < cumulative:
+            item["count"] += 1
+            roll_history.insert(0, item["name"])
+            return item
+    return pool[-1]
+
+def assign_trait_to_unit(unit_index):
+    if unit_index < 0 or unit_index >= len(team):
+        print("Invalid unit number.")
+        return
+
+    unit = team[unit_index]
+    trait = roll_trait()
+    unit["trait"] = trait
+
+    global reroll_counter
+    reroll_counter += 1
+    print(f"{unit['name']} received trait: {trait['name']} ({trait['bonus']})")
+
+
+def print_trait_table():
+    print("\n===== TRAIT COUNTS =====")
+    for item in pool:
+        print(f"{item['name']:<25} -> {item['count']}")
+
+def print_roll_history():
+    print("\n===== ROLL HISTORY (latest 100) =====")
+    for i, result in enumerate(roll_history[:100]):
+        print(f"Roll #{i+1}: {result}")
+
+def show_team():
+    print("\n===== YOUR TEAM =====")
+    for i, unit in enumerate(team):
+        trait = unit["trait"]
+        if trait:
+            print(f"{i+1}. {unit['name']} - {trait['name']} ({trait['bonus']})")
+        else:
+            print(f"{i+1}. {unit['name']} - No trait")
+
+def apply_trait_bonuses(unit):
+    trait = unit.get("trait")
+    if not trait:
+        unit["atk_bonus"] = 0
+        unit["crit_bonus"] = 0
+        unit["hp_bonus"] = 0
+        unit["energy_bonus"] = 0  # Ensure energy_bonus is initialized
+        return
+
+    # Initialize bonuses
+    unit["atk_bonus"] = 0
+    unit["crit_bonus"] = 0
+    unit["hp_bonus"] = 0
+    unit["energy_bonus"] = 0
+
+    match trait["id"]:
+        case "godly":
+            unit["atk_bonus"] = unit["atk"] * 3.0
+            unit["energy_bonus"] = unit["energy_gain"] * 0.2
+            unit["hp_bonus"] = unit["hp"] * 1.0
+        case "legendary":
+            unit["atk_bonus"] = unit["atk"] * 0.5
+            unit["energy_bonus"] = unit["energy_gain"] * 0.1
+        case "deadeye":
+            unit["crit_bonus"] = 30
+        case "mutant":
+            unit["atk_bonus"] = 20
+            unit["energy_bonus"] = unit["energy_gain"] * 0.1
+        case "golden":
+            unit["atk_bonus"] = unit["atk"] * 0.4
+        case "flash":
+            unit["energy_bonus"] = unit["energy_gain"] * 0.2
+        case "juggernaut":
+            unit["hp_bonus"] = unit["hp"] * 0.5
+        case "swift":
+            unit["energy_bonus"] = unit["energy_gain"] * 0.1
+        case "vigor": 
+            unit["hp_bonus"] = unit["hp"] * 0.15
+        case "strength":
+            unit["atk_bonus"] = unit["atk"] * 0.15
+        case _:
+            pass
+
+
+def team_selection():
+    print("=== SELECT YOUR TEAM ===")
+    selected = []
+
+    while len(selected) < 3:
+        print("\nAvailable Units:")
+        for i, u in enumerate(all_units):
+            status = "SELECTED" if u in selected else ""
+            print(f"[{i+1}] {u['name']} {status}")
+        try:
+            choice = int(input(f"Select unit #{len(selected)+1}: ")) - 1
+            if 0 <= choice < len(all_units):
+                chosen = all_units[choice]
+                if chosen not in selected:
+                    # Reset or initialize fields
+                    chosen["energy"] = 0
+                    chosen["alive"] = True
+
+                    # Apply trait bonuses based on existing trait (if any)
+                    apply_trait_bonuses(chosen)
+
+                    selected.append(chosen)
+                else:
+                    print("Already selected.")
+            else:
+                print("Invalid choice.")
+        except ValueError:
+            print("Enter a number.")
+    return selected
+
+def trait_menu():
+    selected_unit = None
+    while True:
+        if selected_unit is None:
+            show_team()
+            try:
+                choice = int(input("Choose a unit to reroll trait for (1-3), or 0 to go back: "))
+                if choice == 0:
+                    break
+                elif 1 <= choice <= 3:
+                    selected_unit = choice - 1
+                else:
+                    print("Invalid choice.")
+            except ValueError:
+                print("Enter a valid number.")
+        else:
+            current = team[selected_unit]
+            print(f"\nRerolling for {current['name']}")
+            print("[1] Reroll Trait [2] View Trait Stats [3] History [4] Switch Unit [0] Back")
+            choice = input("Choice: ").strip()
+
+            if choice == "1":
+                assign_trait_to_unit(selected_unit)
+            elif choice == "2":
+                print_trait_table()
+            elif choice == "3":
+                print_roll_history()
+            elif choice == "4":
+                selected_unit = None
+            elif choice == "0":
+                break
+            else:
+                print("Invalid option.")
+
+def calculate_damage(attacker):
+    """Returns the damage including crit and bonus"""
+    atk = attacker["atk"] + attacker.get("atk_bonus", 0)
+    crit_chance = attacker["crit"] + attacker.get("crit_bonus", 0)
+    if random.randint(1, 100) <= crit_chance:
+        print(f"💥 CRITICAL HIT by {attacker['name']}!")
+        return int(atk * 1.5)
+    return int(atk)
+
+def gain_energy(unit):
+    unit["energy"] += unit["energy_gain"] + unit["energy_bonus"]
+    if unit["energy"] >= 6:
+        print(f"{unit['name']} can now use their Ultimate!")
+        return True
+    return False
+
+def boss_battle():
+    print("\n=== BOSS BATTLE ===")
+    boss = {
+        "name": "joe",
+        "hp": 5000,
+        "atk": 10,
+        "energy": 0,
+        "alive": True,
+        "ultn": "joe mama"
+    }
+
+    # Initialize each unit's stats
+    for unit in team:
+        apply_trait_bonuses(unit)  # Apply trait bonuses
+        unit["energy"] = 0  # Add energy stat to each unit
+        unit["alive"] = True
+        unit["currenthp"] = unit["hp"] + unit["hp_bonus"]  # Initialize current HP with bonus
+        unit["currentatk"] = unit["atk"] + unit["atk_bonus"]  # Initialize attack with bonus
+        unit["cenergy_gain"] = unit["energy_gain"] + unit["energy_bonus"]  # Update energy gain with bonus
+        unit["blocking"] = False  # Initialize blocking status
+
+    round_num = 1
+
+    while any(u["alive"] for u in team) and boss["hp"] > 0:
+        print(f"\n--- Round {round_num} ---")
+        
+        # Player Phase
+        for unit in team:
+            if not unit["alive"]:
+                continue
+
+            print(f"\n{unit['name']} ({unit['currenthp']} HP, {unit['energy']} Energy)")
+
+            while True:
+                action = input(f"Choose action for {unit['name']} - [A]ttack, [U]ltimate, [B]lock, [C]harge: ").strip().lower()
+
+                if action == 'a':
+                    unit["blocking"] = False
+                    damage = calculate_damage(unit)
+                    gain_energy(unit)  # gain 1 energy
+                    unit["energy"] = round(unit["energy"], 1)
+                    boss["hp"] -= damage
+                    print(f"{unit['name']} attacks for {damage} damage.")
+                    print(f"{boss['name']} has {boss['hp']} HP left.")
+                    break
+                elif action == 'u':
+                    unit["blocking"] = False
+                    if unit["energy"] >= 6:
+                        damage = calculate_damage(unit) * 3
+                        unit["energy"] -= 6
+                        boss["hp"] -= damage
+                        unit["energy"] = round(unit["energy"], 1)
+                        print(f"{unit['name']} unleashes {unit['ultm']} for {damage} damage.")
+                        print(f"{boss['name']} has {boss['hp']} HP left.")
+                        break
+                    else:
+                        print("Not enough energy for Ultimate.")
+                elif action == 'b':
+                    unit["blocking"] = True
+                    gain_energy(unit)
+                    unit["energy"] = round(unit["energy"], 1)
+                    print(f"{unit['name']} is blocking this round.")
+                    break
+                elif action == 'c':
+                    unit["blocking"] = False
+                    unit["energy"] += (1)  # gain 2 energy, cap at 6
+                    gain_energy(unit)
+                    unit["energy"] = round(unit["energy"], 1)
+                    print(f"{unit['name']} is charging energy!")
+                    break
+                else:
+                    print("Invalid input. Choose A, U, B, or C.")
+
+        # Boss Phase
+        if boss["hp"] <= 0:
+            boss["alive"] = False
+            print(f"{boss['name']} has been defeated!")
+            break  # Exit the loop once the boss is defeated
+        elif boss["alive"]:
+            print(f"{boss['name']} ({boss['hp']} HP, {boss['energy']} Energy)")
+
+            boss["energy"] += 1
+            if boss["energy"] >= 6:
+                print(f"{boss['name']} unleashes their Ultimate: {boss['ultn']}")
+                damage = boss["atk"] + 50
+                boss["energy"] = 0
+            else:
+                damage = boss["atk"]
+
+            # Choose random alive unit
+            alive_units = [u for u in team if u["alive"]]
+            if alive_units:
+                target = random.choice(alive_units)
+                if target["blocking"]:
+                    damage = round(damage * 0.5)
+                target["currenthp"] -= damage
+                print(f"{boss['name']} attacks {target['name']} for {damage} damage!")
+                print(f"{target['name']} has {target['currenthp']} HP left.")
+
+                if target["currenthp"] <= 0:
+                    target["alive"] = False
+                    print(f"{target['name']} has fallen!")
+
+        round_num += 1
+
+    print("\n=== BATTLE ENDED ===")
+    if boss["alive"]:
+        print("You lose")
+    else:
+        print("You win")
+
+
+def main():
+    global team
+    while True:
+        print("\n=== MAIN MENU ===")
+        print("[1] Select Team")
+        print("[2] Reroll Traits")
+        print("[3] Enter Boss Battle")
+        print("[0] Exit")
+        choice = input("Choice: ").strip()
+
+        if choice == "1":
+            team = team_selection()
+        elif choice == "2":
+            if not team:
+                print("Select your team first.")
+            else:
+                trait_menu()
+        elif choice == "3":
+            if not team:
+                print("Select your team first.")
+            else:
+                boss_battle()
+        elif choice == "0":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice.")
+
+if __name__ == "__main__":
+    main()
